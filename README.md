@@ -1,8 +1,8 @@
 # kobo-migration
 
-Transfer KoboToolbox submissions, including attachments and validation statuses, from one server to another. This
-process assumes the form already exists on the destination server. Note that attachment names will be renamed using the
-pattern `{form_id}_{submission_id}-{question_name}-{i}` to ensure they are properly recognized by Kobo.
+Transfer KoboToolbox submissions, including attachments and validation statuses, from one server to another.
+- The process assumes the form already exists on the destination server. 
+- Attachments will be renamed using the pattern `{form_id}_{submission_id}-{question}-{i}` to ensure they are properly recognized by Kobo.
 
 This script uses the [kobo-sdk](https://github.com/DRC-UA/kobo-sdk), which abstracts the complexities of interacting
 with the Kobo API. Feel free to use it to create your own custom scripts.

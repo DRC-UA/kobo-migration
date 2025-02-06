@@ -30,7 +30,7 @@
     "date-fns": "^4.1.0",
     "dotenv": "^16.4.7",
     "form-data": "^4.0.1",
-    "kobo-sdk": "file:../kobo-sdk/kobo-sdk-1.1.5.tgz",
+    "kobo-sdk": "2.0.0",
     "nanospinner": "^1.2.2",
     "progress": "^2.0.3",
     "zod": "^3.24.1"
