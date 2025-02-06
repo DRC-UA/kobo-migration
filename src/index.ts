@@ -3,7 +3,6 @@ import {z} from 'zod'
 import dotenv from 'dotenv'
 
 dotenv.config()
-
 ;(async () => {
   const envSchema = z.object({
     KOBO_SOURCE_URL: z.string(),

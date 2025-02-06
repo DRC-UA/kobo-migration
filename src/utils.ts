@@ -1,12 +1,15 @@
-export const truncateString = (str: string, maxLength: number) => str.length > maxLength ? str.slice(0, maxLength - 3) + '...' : str
 import * as c from 'ansi-colors'
+
+export const truncateString = (str: string, maxLength: number) => {
+  return str.length > maxLength ? str.slice(0, maxLength - 3) + '...' : str
+}
 
 export const makeProgress = (current: number, max: number) => {
   return `${current.toString().padStart(max.toString().length, ' ')}/${max}`
 }
 
 export const makeProgressAndPercent = (current: number, max: number) => {
-  return `${(current / max * 100).toFixed(1).toString().padStart(4, ' ')}% ${makeProgress(current, max)}`
+  return `${((current / max) * 100).toFixed(1).toString().padStart(4, ' ')}% ${makeProgress(current, max)}`
 }
 
 export const makeStepper = (current: number, max: number): string => {
