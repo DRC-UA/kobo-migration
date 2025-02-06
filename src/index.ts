@@ -1,7 +1,7 @@
 import {migrate} from './migrate.js'
 
 await migrate({
-  dryRun: true,
+  dryRun: false,
   filters: {
     submissionDateStart: new Date(2025, 0, 1),
     submissionDateEnd: new Date(2025, 1, 1),
