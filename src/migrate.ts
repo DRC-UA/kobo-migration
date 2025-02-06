@@ -2,8 +2,8 @@ import {PromisePool} from '@supercharge/promise-pool'
 import {Kobo, KoboClient} from 'kobo-sdk'
 import {duration, Obj, seq, sleep} from '@alexandreannic/ts-utils'
 import {createSpinner} from 'nanospinner'
-import {makeProgress, makeProgressAndPercent, makeStepper, truncateString} from './utils'
-import * as c from 'ansi-colors'
+import {makeProgress, makeProgressAndPercent, makeStepper, truncateString} from './utils.js'
+import c from 'ansi-colors'
 import {subDays} from 'date-fns'
 
 export const migrate = async ({
@@ -58,7 +58,6 @@ export const migrate = async ({
         if (formIdsIgnored) return f.filter(_ => !formIdsIgnored.includes(_.uid))
         return f
       })
-    if (filters.formIds) return forms.filter(_ => filters.formIds!.includes(_.uid))
     spinner.success({text: `Fetching forms... ${forms.length} forms fetched`})
     return forms
   }
@@ -190,6 +189,10 @@ export const migrate = async ({
   const forms = await getFormsToMigrate()
   await PromisePool.withConcurrency(1)
     .for(forms)
-    .process((_, i) => migrateForm(_, i, forms.length))
-  process.exit(0)
+    .handleError(e => {
+      throw e
+    })
+    .process((_, i) => {
+      return migrateForm(_, i, forms.length)
+    })
 }

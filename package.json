@@ -2,11 +2,15 @@
   "name": "kobo-migration",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "type": "module",
+  "exports": "index.js",
   "scripts": {
     "format": "prettier --write \"**/*.{js,ts,tsx,json}\" --config .prettierrc",
-    "start": "ts-node src/index.ts",
+    "start": "tsc && node dist/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "engines": {
+    "node": ">=18"
   },
   "author": "",
   "license": "ISC",
@@ -14,7 +18,6 @@
     "@types/node": "^22.13.1",
     "@types/progress": "^2.0.7",
     "prettier": "^3.4.2",
-    "ts-node": "^10.9.2",
     "typescript": "^5.7.3"
   },
   "dependencies": {

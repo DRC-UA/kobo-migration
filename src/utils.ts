@@ -1,4 +1,4 @@
-import * as c from 'ansi-colors'
+import c from 'ansi-colors'
 
 export const truncateString = (str: string, maxLength: number) => {
   return str.length > maxLength ? str.slice(0, maxLength - 3) + '...' : str
