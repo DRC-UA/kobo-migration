@@ -9,7 +9,7 @@ export const makeProgress = (current: number, max: number) => {
 }
 
 export const makeProgressAndPercent = (current: number, max: number) => {
-  return `${((current / max) * 100).toFixed(1).toString().padStart(4, ' ')}% ${makeProgress(current, max)}`
+  return `${makeProgress(current, max)} ${((current / max) * 100).toFixed(1).toString().padStart(4, ' ')}%`
 }
 
 export const makeStepper = (current: number, max: number): string => {

@@ -1,9 +1,10 @@
 import {PromisePool} from '@supercharge/promise-pool'
 import {Kobo, KoboClient} from 'kobo-sdk'
-import {Obj, seq, sleep} from '@alexandreannic/ts-utils'
+import {duration, Obj, seq, sleep} from '@alexandreannic/ts-utils'
 import {createSpinner} from 'nanospinner'
 import {makeProgress, makeProgressAndPercent, makeStepper, truncateString} from './utils'
 import * as c from 'ansi-colors'
+import {subDays} from 'date-fns'
 
 export const migrate = async ({
   source,
@@ -21,14 +22,14 @@ export const migrate = async ({
     offset?: number
   } & (
     | {
-        formIdsIgnored?: Kobo.FormId[]
-        formIds?: never
-      }
+    formIdsIgnored?: Kobo.FormId[]
+    formIds?: never
+  }
     | {
-        formIdsIgnored?: never
-        formIds?: Kobo.FormId[]
-      }
-  )
+    formIdsIgnored?: never
+    formIds?: Kobo.FormId[]
+  }
+    )
   /** @deprecated Not implemented yet*/
   migratedAnswerTag?: string
   dryRun?: boolean
@@ -103,12 +104,18 @@ export const migrate = async ({
   }
 
   const migrateForm = async (form: Kobo.Form, index: number, total: number) => {
-    const logHead = `${c.bold(makeProgress(index + 1, total))} ${c.grey(form.uid)} ${truncateString(form.name, 32).padEnd(32, ' ')}`
-    const spinner = createSpinner(`${logHead} ${makeStepper(0, 3)} Fetching submissions...`).start()
+    const t0 = new Date().getTime()
+    const getElapsedTime = () => duration(new Date().getTime() - t0).toString()
+    const makeLog = ({msg, step, showDuration, completed, length}: {msg: string, step: number, showDuration?: boolean, completed?: number, length?: number}) => {
+      const logHead = `${c.bold(makeProgress(index + 1, total))} ${c.grey(form.uid)} ${truncateString(form.name, 40).padEnd(40, ' ')}`
+      return `${logHead} ${makeStepper(step, 3)} ${msg.padEnd(34)} ${(completed && length ? makeProgressAndPercent(completed, length) : '').padStart(16, ' ')}\t${c.dim(showDuration ? getElapsedTime() : '')}`
+    }
+
+    const spinner = createSpinner(makeLog({step: 0, msg: 'Fetching submissions'})).start()
 
     const destinationExist = await destinationSdk.v2.form.get({formId: form.uid}).then(_ => !!_.uid)
     if (!destinationExist) {
-      spinner.success(`${logHead} ${makeStepper(0, 3)} Form does not exist in destination server.`)
+      spinner.success(makeLog({step: 0, msg: 'Form does not exist in dest server', showDuration: true}))
       return
     }
     const submissions = await sourceSdk.v2.submission
@@ -119,14 +126,11 @@ export const migrate = async ({
       .then(seq)
 
     if (submissions.length === 0) {
-      spinner.success(`${logHead} ${makeStepper(0, 3)} No data.`)
+      spinner.success(makeLog({step: 0, msg: 'No data', showDuration: true}))
       return
     }
-    let completed = 0
 
-    spinner.update({
-      text: `${logHead} ${makeStepper(1, 3)}  Migrating answers + attachments ${makeProgressAndPercent(completed, submissions.length)}`,
-    })
+    let completed = 0
 
     const idx_uuid_validation = await PromisePool.withConcurrency(20)
       .for(submissions)
@@ -143,9 +147,7 @@ export const migrate = async ({
             }
           }),
         })
-        spinner.update(
-          `${logHead} ${makeStepper(1, 3)} Migrating answers + attachments ${makeProgressAndPercent(completed, submissions.length)}`,
-        )
+        spinner.update(makeLog({step: 1, msg: ' Migrating answers + attachment', completed, length: submissions.length}))
         completed++
         if (res) return {uuid: res, validation: submission._validation_status.uid}
       })
@@ -158,8 +160,9 @@ export const migrate = async ({
           ]),
       )
 
-    spinner.update(`${logHead} ${makeStepper(2, 3)} Fetching new ${c.bold.grey('_.id')} ...`)
-    const idx_id_validation = await destinationSdk.v2.submission.get({formId: form.uid}).then(_ => {
+    spinner.update(makeLog({step: 2, msg: `Fetching new ${c.bold.grey('_.id')}`}))
+
+    const idx_id_validation = await destinationSdk.v2.submission.get({formId: form.uid, filters: {start: subDays(new Date(), 1)}}).then(_ => {
       return seq(_.results)
         .map(_ => {
           const validation = idx_uuid_validation[_._uuid]
@@ -178,14 +181,10 @@ export const migrate = async ({
           submissionIds: subs.map(_ => _._id),
           status: validationStatus,
         })
-        spinner.update(
-          `${logHead} ${makeStepper(3, 3)} Migrating validation status ${makeProgressAndPercent(completed, submissions.length)}`,
-        )
+        spinner.update(makeLog({msg: 'Migrating validation status', length: submissions.length, completed, step: 3}))
         completed += subs.length
       })
-    spinner.success(
-      `${logHead} ${makeStepper(4, 3)} Migrating validation status ${makeProgressAndPercent(completed, submissions.length)}`,
-    )
+    spinner.success(makeLog({msg: 'Migrating validation status', length: submissions.length, completed, step: 4, showDuration: true}))
   }
 
   const forms = await getFormsToMigrate()
